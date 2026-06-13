@@ -439,7 +439,8 @@ function createChatRoom(email) {
     messages: {}
   });
   
-  const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'live-chat.html');
+  // FIXED: Changed 'live-chat.html' to 'service.html'
+  const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'service.html');
   return `${baseUrl}?room=${roomId}&email=${encodeURIComponent(email)}`;
 }
 
