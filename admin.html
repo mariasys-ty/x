@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+
+<meta name="robots" content="noindex,nofollow">
+<title>System Management — Xstream</title>
+<link rel="icon" type="image/webp" sizes="16x16" href="https://ik.imagekit.io/s95tumxuk/IMG_2611.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<div class="tbox" id="tbox"></div>
+
+<!-- LOGIN SCREEN -->
+<div id="loginS" class="login-s">
+  <div class="login-c">
+    <p class="br">XSTRΞAM</p>
+    <h2>System Management</h2>
+    <p class="sb">Sign in to manage your database</p>
+    <div class="ferr hidden" id="lErr"></div>
+    <div class="fg"><label>Email</label><input type="email" id="lE" placeholder="admin@example.com"></div>
+    <div class="fg"><label>Password</label><input type="password" id="lP" placeholder="********"></div>
+    <button class="btn btn-p btn-full" id="lB" style="margin-top:.5rem"><i data-lucide="log-in"></i> Sign In</button>
+  </div>
+</div>
+
+<!-- MAIN DASHBOARD -->
+<div id="dashS" class="hidden">
+
+<!-- TOP NAVIGATION -->
+<nav class="topbar">
+  <div class="topbar-l">
+    <span class="topbar-br">Xstream</span>
+    <span class="topbar-sep">·</span>
+    <span class="topbar-ti">System Manager</span>
+  </div>
+  <div class="topbar-r">
+    <button class="theme-btn" id="themeBtn" title="Toggle theme"><i data-lucide="sun" id="themeIcon"></i></button>
+    <span class="topbar-u"><strong id="uEm"></strong></span>
+    <button class="btn btn-g btn-sm" id="loB"><i data-lucide="log-out"></i></button>
+  </div>
+</nav>
+
+<!-- TAB BAR -->
+<div class="tabs" id="tabBar">
+  <button class="tab active" data-tab="database"><i data-lucide="database"></i> Database</button>
+  <button class="tab" data-tab="overview"><i data-lucide="layout-dashboard"></i> Overview</button>
+  <button class="tab" data-tab="analytics"><i data-lucide="bar-chart-3"></i> Analytics</button>
+  <button class="tab" data-tab="health"><i data-lucide="heart-pulse"></i> Health</button>
+  <button class="tab" data-tab="security"><i data-lucide="shield-alert"></i> Security</button>
+  <button class="tab" data-tab="users"><i data-lucide="users"></i> Users</button>
+  <button class="tab" data-tab="maintenance"><i data-lucide="settings"></i> Settings</button>
+  <button class="tab" onclick="window.location.href='adminseries.html'">
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+  Series
+</button>
+<button class="tab" onclick="window.location.href='admintm.html'">
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+  TM
+</button>
+<button class="tab" onclick="window.location.href='adminon.html'">
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+  NON
+</button>
+</div>
+
+<!-- DASHBOARD CONTENT -->
+<div class="dash">
+
+<!-- ==================== DATABASE EXPLORER TAB ==================== -->
+<div class="tp active" id="p-database">
+  
+  <!-- Sidebar + Main Content Layout -->
+  <div style="display:flex;gap:1rem;margin-bottom:1rem">
+    
+    <!-- Sidebar - Root Nodes -->
+    <div style="width:260px;flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r-l);padding:1rem;display:flex;flex-direction:column;gap:.75rem;max-height:calc(100vh - 200px);overflow-y:auto;">
+      <div style="margin-bottom:.5rem;">
+        <h3 style="font-size:1rem;font-weight:700;">Root Nodes</h3>
+        <p style="font-size:.75rem;color:var(--muted);margin-top:.15rem;">Firebase Realtime Database</p>
+      </div>
+      
+      <div class="node-list" id="root-nodes">
+        <!-- Populated by JS -->
+      </div>
+
+      <div class="path-input-group">
+        <label>Custom Path</label>
+        <input type="text" class="input-field" id="custom-path-input" placeholder="e.g. users/-Nxabc...">
+        <button class="btn btn-p" onclick="loadCustomPath()" style="width:100%;margin-top:.35rem"><i data-lucide="folder-search"></i> Load Path</button>
+      </div>
+
+      <div style="margin-top:auto;padding-top:.75rem;border-top:1px solid var(--border);">
+        <button class="btn btn-g btn-full" onclick="loadPath('/')" style="margin-bottom:.35rem"><i data-lucide="home"></i> Go to Root</button>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div style="flex:1;min-width:0;">
+      
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);">
+        <div>
+          <h2 style="font-size:1.25rem;font-weight:800;display:flex;align-items:center;gap:.5rem;">
+            <i data-lucide="database" style="color:var(--accent)"></i> Database Explorer
+          </h2>
+          <p style="font-size:.8rem;color:var(--muted);margin-top:.2rem;">View, Edit, and Delete data directly. Be cautious.</p>
+        </div>
+        <a href="index.html" class="btn btn-g"><i data-lucide="external-link"></i> Back to Site</a>
+      </div>
+
+      <!-- Current Path Badge -->
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.85rem;">
+        <span style="font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;">Current Path:</span>
+        <span class="path-badge" id="current-path-badge">/</span>
+      </div>
+
+      <!-- Maintenance Mode Card -->
+      <div class="card" style="border-color:var(--warn);border-left:4px solid var(--warn);margin-bottom:1rem;">
+        <div class="card-header">
+          <div>
+            <h3 style="display:flex;align-items:center;gap:.5rem;font-size:.95rem;">
+              <i data-lucide="alert-triangle" style="color:var(--warn)"></i>
+              Maintenance Mode
+            </h3>
+            <p style="font-size:.8rem;color:var(--muted);margin-top:.3rem;">Block all non-admin users from accessing the website.</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <div class="maintenance-status">
+              <div class="dot" id="maintenance-dot"></div>
+              <span id="maintenance-label" style="font-weight:700;font-size:.85rem;">OFFLINE</span>
+            </div>
+            <div class="toggle-btn" id="maintenance-toggle" onclick="toggleMaintenance()">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- JSON Editor Card -->
+      <div class="card">
+        <div class="card-header">
+          <div style="display:flex;align-items:center;gap:.75rem;">
+            <h3><i data-lucide="code-2" style="color:var(--info)"></i> Node Data</h3>
+          </div>
+          <div style="display:flex;gap:.5rem;">
+            <button class="btn btn-g btn-sm" onclick="formatJson()"><i data-lucide="align-left"></i> Format</button>
+            <button class="btn btn-p btn-sm" onclick="saveNode()"><i data-lucide="save"></i> Save Changes</button>
+            <button class="btn btn-d btn-sm" onclick="deleteNode()"><i data-lucide="trash-2"></i> Delete Node</button>
+          </div>
+        </div>
+        <textarea class="json-editor" id="json-editor" spellcheck="false">{}</textarea>
+        <p style="font-size:.72rem;color:var(--muted);margin-top:.6rem;"><i data-lucide="info" style="width:12px;height:12px;display:inline;vertical-align:middle;"></i> Editing JSON here directly overwrites the database node. Ensure JSON is valid before saving.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ==================== OVERVIEW TAB ==================== -->
+<div class="tp" id="p-overview">
+  <div class="stats" id="ovStats"></div>
+  <div class="panels">
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="eye"></i> Views (7 Days)</h3></div><div class="pnl-b"><div class="chart-wrap"><canvas id="ovViewsChart"></canvas></div></div></div>
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="users"></i> Visitors (7 Days)</h3></div><div class="pnl-b"><div class="chart-wrap"><canvas id="ovVisChart"></canvas></div></div></div>
+  </div>
+  <div class="panels">
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="smartphone"></i> Devices</h3></div><div class="pnl-b"><div class="chart-wrap" style="max-width:200px;margin:0 auto"><canvas id="ovDevChart"></canvas></div></div></div>
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="globe"></i> Countries</h3></div><div class="pnl-b"><div class="chart-wrap" style="max-width:200px;margin:0 auto"><canvas id="ovCountryChart"></canvas></div></div></div>
+  </div>
+  <div class="panels">
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="map"></i> World Map</h3></div><div class="pnl-b"><div class="map-container"><canvas class="map-canvas" id="ovMapCanvas"></canvas><div class="map-tip" id="ovMapTip"></div><div class="map-legend"><div class="map-legend-dot" style="background:var(--accent)"></div> Size = visits</div></div></div></div>
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="activity"></i> Live Feed</h3></div><div class="pnl-b"><div class="feed" id="ovFeed"><div class="ld"><div class="spin-r spin"></div></div></div></div></div>
+  </div>
+  <div class="panels">
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="route"></i> Traffic Sources</h3></div><div class="pnl-b"><div class="chart-wrap" style="max-width:200px;margin:0 auto"><canvas id="ovSrcChart"></canvas></div></div></div>
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="search"></i> SEO Health</h3></div><div class="pnl-b" id="ovSEO"><div class="empty-s">Loading...</div></div></div>
+  </div>
+</div>
+
+<!-- ==================== ANALYTICS TAB ==================== -->
+<div class="tp" id="p-analytics">
+  <div class="range-bar">
+    <button class="rb active" data-range="today">Today</button>
+    <button class="rb" data-range="7">7 Days</button>
+    <button class="rb" data-range="30">30 Days</button>
+    <button class="rb" data-range="all">All Time</button>
+    <span class="sp"></span>
+    <span class="upd" id="aUpd"></span>
+  </div>
+  <div class="stats" id="aStats"></div>
+  <div class="panels">
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="bar-chart-2"></i> Views &amp; Clicks</h3></div><div class="pnl-b"><div class="chart-wrap"><canvas id="aViewsCh"></canvas></div></div></div>
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="user-plus"></i> New vs Returning</h3></div><div class="pnl-b"><div class="chart-wrap" style="max-width:190px;margin:0 auto"><canvas id="aNrCh"></canvas></div></div></div>
+  </div>
+  <div class="panels">
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="arrow-down"></i> Scroll Depth</h3></div><div class="pnl-b"><div class="chart-wrap"><canvas id="aScrollCh"></canvas></div></div></div>
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="zap"></i> Engagement</h3></div><div class="pnl-b"><div class="chart-wrap" style="max-width:190px;margin:0 auto"><canvas id="aEngCh"></canvas></div></div></div>
+  </div>
+  <div class="sec-lbl">Traffic &amp; UTM</div>
+  <div class="panels">
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="route"></i> Traffic Sources</h3></div><div class="pnl-b" id="aSrc"><div class="empty-s">No data</div></div></div>
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="tag"></i> UTM Campaigns</h3></div><div class="pnl-b" id="aUTM"><div class="empty-s">No UTM data</div></div></div>
+  </div>
+  <div class="sec-lbl">Behavior</div>
+  <div class="panels">
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="search"></i> Searches</h3></div><div class="pnl-b" style="overflow-x:auto" id="aSearch"><div class="empty-s">No data</div></div></div>
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="git-branch"></i> Route Flows</h3></div><div class="pnl-b" style="overflow-x:auto" id="aRoutes"><div class="empty-s">No data</div></div></div>
+  </div>
+  <div class="sec-lbl">Technology</div>
+  <div class="panels">
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="globe"></i> Browsers</h3></div><div class="pnl-b" id="aBrw"></div></div>
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="monitor"></i> Device Types</h3></div><div class="pnl-b" id="aDevSub"><div class="empty-s">No data</div></div></div>
+  </div>
+  <div class="danger"><h3>Delete Analytics</h3><p>Permanently remove all analytics data. This cannot be undone.</p><button class="btn btn-d btn-sm" id="clrA"><i data-lucide="trash-2"></i> Delete All</button></div>
+</div>
+
+<!-- ==================== HEALTH TAB ==================== -->
+<div class="tp" id="p-health">
+  <div class="hs" id="hScore"><div class="ld"><div class="spin-r spin"></div> Loading...</div></div>
+  <div class="cwv-g" id="hCWV"></div>
+  <div class="stats" id="hPerf"></div>
+  <div class="panels">
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="bug"></i> JS Errors <span style="font-weight:400;color:var(--muted)" id="hErrCnt"></span></h3></div><div class="pnl-b"><div class="el" id="hErrLog"><div class="empty-s">No errors</div></div></div></div>
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="image-off"></i> Resource Errors <span style="font-weight:400;color:var(--muted)" id="hResErrCnt"></span></h3></div><div class="pnl-b"><div class="el" id="hResErrLog"><div class="empty-s">No errors</div></div></div></div>
+  </div>
+  <div class="danger"><h3>Clear Health</h3><p>Remove all health data.</p><button class="btn btn-d btn-sm" id="clrH"><i data-lucide="trash-2"></i> Clear</button></div>
+</div>
+
+<!-- ==================== SECURITY TAB ==================== -->
+<div class="tp" id="p-security">
+  <div class="stats" id="secStats"></div>
+  <div class="panels">
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="bar-chart"></i> Bot Score Distribution</h3></div><div class="pnl-b"><div class="chart-wrap"><canvas id="secBotCh"></canvas></div></div></div>
+    <div class="pnl"><div class="pnl-h"><h3><i data-lucide="flag"></i> Security Flags</h3></div><div class="pnl-b" id="secFlags"><div class="empty-s">No data</div></div></div>
+  </div>
+  <div class="panels">
+    <div class="pnl full"><div class="pnl-h"><h3><i data-lucide="alert-triangle"></i> Suspicious Visitors</h3></div><div class="pnl-b" style="overflow-x:auto" id="secSusp"><div class="empty-s">No suspicious visitors</div></div></div>
+  </div>
+  <div class="panels">
+    <div class="pnl full"><div class="pnl-h"><h3><i data-lucide="bell"></i> Recent Alerts</h3></div><div class="pnl-b"><div class="feed" id="secAlerts"><div class="empty-s">No alerts</div></div></div></div>
+  </div>
+</div>
+
+<!-- ==================== USERS TAB ==================== -->
+<div class="tp" id="p-users">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.65rem">
+    <div>
+      <h2 style="font-size:1rem;font-weight:800">Registered Users</h2>
+      <p style="font-size:.78rem;color:var(--muted);margin-top:.05rem" id="uCnt">Loading...</p>
+    </div>
+    <button class="btn btn-g btn-sm" id="refU"><i data-lucide="refresh-cw"></i> Refresh</button>
+  </div>
+  <div class="users-g" id="uGrid"><div class="ld"><div class="spin-r spin"></div> Loading...</div></div>
+</div>
+
+<!-- ==================== MAINTENANCE/SETTINGS TAB ==================== -->
+<div class="tp" id="p-maintenance">
+  <div style="max-width:540px">
+    <div class="st-ind off" id="mSt"><span class="st-dot"></span><span id="mStT">Site is Live</span></div>
+    <div class="tog-sec">
+      <div class="tog-row">
+        <div class="tog-info">
+          <h3>Maintenance Mode</h3>
+          <p>Visitors see maintenance page</p>
+        </div>
+        <label class="tog-sw">
+          <input type="checkbox" id="mTog">
+          <span class="tog-sl"></span>
+        </label>
+      </div>
+    </div>
+    <div class="dv"></div>
+    <div class="fg"><label>Custom Message</label><textarea id="mMsg" rows="3" placeholder="Leave empty for default..."></textarea></div>
+    <button class="btn btn-p" id="mSav" style="margin-top:.5rem"><i data-lucide="save"></i> Save Message</button>
+    <div class="dv"></div>
+    <div style="display:flex;gap:.6rem">
+      <button class="btn btn-d" id="mOn"><i data-lucide="power"></i> Turn On</button>
+      <button class="btn btn-s" id="mOff"><i data-lucide="power"></i> Turn Off</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .dash -->
+</div><!-- end #dashS -->
+
+<!-- USER MODAL -->
+<div class="mo" id="userModal">
+  <div class="mb">
+    <div class="mh">
+      <div class="ma" id="mAv">?</div>
+      <div class="mhi"><h3 id="mNm"></h3><p id="mEm"></p></div>
+      <button class="mx" id="mClose"><i data-lucide="x"></i></button>
+    </div>
+    <div class="mts">
+      <button class="mt active" data-mt="profile">Profile</button>
+      <button class="mt" data-mt="artworks">Artworks</button>
+      <button class="mt" data-mt="messages">Messages</button>
+      <button class="mt" data-mt="raw">Raw Data</button>
+    </div>
+    <div class="mbo">
+      <div class="mtp active" id="mtp-profile"></div>
+      <div class="mtp" id="mtp-artworks"></div>
+      <div class="mtp" id="mtp-messages"></div>
+      <div class="mtp" id="mtp-raw"></div>
+    </div>
+    <div class="mf">
+      <span class="uid-tag" id="mUid" title="Click to copy"><i data-lucide="copy"></i> </span>
+      <button class="btn btn-d btn-sm" id="mDelUser"><i data-lucide="trash-2"></i> Delete User</button>
+    </div>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>
